@@ -1,0 +1,21 @@
+#!/bin/bash
+
+LOG_FILE="/var/log/nginx/access.log"
+
+awk -F'[ :]+' '{
+    if ($7 ~ /^\/location[0-9]+($|\/|\?)/) {
+        location = $7;
+        split($4, date_parts, "[/:]");
+        date = sprintf("%s-%s-%s", date_parts[3], date_parts[2], date_parts[1]);
+        hits[location,date]++;
+    }
+}
+END {
+    for (key in hits) {
+        split(key, parts, SUBSEP);
+        location = parts[1];
+        date = parts[2];
+        count = hits[key];
+        printf("%s %s %d\n", location, date, count);
+    }
+}' $LOG_FILE
